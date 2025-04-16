@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Object Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .upload-box {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YOLO Object Detection</h1>
+        <div class="upload-box">
+            <input type="file" id="fileInput" accept="image/*">
+            <button onclick="uploadImage()">Upload and Detect</button>
+        </div>
+        <div class="results">
+            <h2>Results</h2>
+            <div id="detections"></div>
+            <img id="outputImage" src="" alt="Output Image" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const detectionsDiv = document.getElementById('detections');
+            const outputImage = document.getElementById('outputImage');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image first!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            // Send the image to the server for detection
+            const response = await fetch('/detect', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            // Display the detection results
+            detectionsDiv.innerHTML = '<h3>Detected Objects:</h3>';
+            data.detections.forEach(detection => {
+                detectionsDiv.innerHTML += `
+                    <p>
+                        <strong>Class:</strong> ${detection.name} |
+                        <strong>Confidence:</strong> ${Math.round(detection.confidence * 100)}% |
+                        <strong>Bounding Box:</strong> [${Math.round(detection.xmin)}, ${Math.round(detection.ymin)}, ${Math.round(detection.xmax)}, ${Math.round(detection.ymax)}]
+                    </p>
+                `;
+            });
+
+            // Display the output image with bounding boxes
+            outputImage.src = data.output_image;
+            outputImage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
